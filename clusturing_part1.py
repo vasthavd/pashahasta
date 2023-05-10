@@ -80,7 +80,7 @@ def read_world_bank_csv(file_name):
     return year_as_column, country_as_column
 
 
-
+"""
 df_ate, df_atet = read_world_bank_csv('Access to Electricity(% of Population).csv')
 print(df_ate.head())
 
@@ -222,8 +222,94 @@ plt.xlabel("Methane emissions")
 plt.ylabel("Urban population")
 plt.show()
 
-
+# move the cluster centres to the original scale
+cen = ct.backscale(cen, df_min, df_max)
+xcen = cen[:, 0]
+ycen = cen[:, 1]
+# cluster by cluster
+plt.figure(figsize=(8.0, 8.0))
+cm = plt.cm.get_cmap('tab10')
+plt.scatter(df_2020["Methane emissions"], df_2020["Urban population"], 10, labels, marker="o",cmap=cm)
+plt.scatter(xcen, ycen, 45, "k", marker="d")
+plt.xlabel("Methane emissions")
+plt.ylabel("Urban population")
+plt.show()
 """
+
+def form_cluster(csv_file1, xlabel, ylabel):
+    
+    df_ate, df_atet = read_world_bank_csv(csv_file1)
+    print(df_ate.head())
+
+    df_co3 = df_ate[["1990", "2000", "2010", "2020"]]
+    print(df_co3.head())
+
+
+    pd.plotting.scatter_matrix(df_co3, figsize=(12, 12), s=5, alpha=0.8)
+    plt.show()
+
+    df_ex = df_co3[["1990", "2020"]] # extract the two columns for clustering
+    df_ex = df_ex.dropna() # entries with one nan are useless
+    df_ex = df_ex.reset_index()
+    print(df_ex.iloc[0:15])
+    # reset_index() moved the old index into column index
+    # remove before clustering
+    df_ex = df_ex.drop("Country Name", axis=1)
+    print(df_ex.iloc[0:15])
+    # normalise, store minimum and maximum
+    df_norm, df_min, df_max = ct.scaler(df_ex)
+    print()
+    print("n score")
+    # loop over number of clusters
+    for ncluster in range(2, 10):
+        # set up the clusterer with the number of expected clusters
+        kmeans = cluster.KMeans(n_clusters=ncluster)
+        # Fit the data, results are stored in the kmeans object
+        kmeans.fit(df_norm) # fit done on x,y pairs
+        labels = kmeans.labels_
+        # extract the estimated cluster centres
+        cen = kmeans.cluster_centers_
+        # calculate the silhoutte score
+        print(ncluster, skmet.silhouette_score(df_ex, labels))
+        
+
+    ncluster = 7 # best number of clusters
+    # set up the clusterer with the number of expected clusters
+    kmeans = cluster.KMeans(n_clusters=ncluster)
+    # Fit the data, results are stored in the kmeans object
+    kmeans.fit(df_norm) # fit done on x,y pairs
+    labels = kmeans.labels_
+    # extract the estimated cluster centres
+    cen = kmeans.cluster_centers_
+    cen = np.array(cen)
+    xcen = cen[:, 0]
+    ycen = cen[:, 1]
+    # cluster by cluster
+    plt.figure(figsize=(8.0, 8.0))
+    cm = plt.cm.get_cmap('tab10')
+    plt.scatter(df_norm["1990"], df_norm["2020"], 10, labels, marker="o", cmap=cm)
+    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.show()
+
+    print(cen)
+    # Applying the backscale function to convert the cluster centre
+    scen = ct.backscale(cen, df_min, df_max)
+    print()
+    print(scen)
+    xcen = scen[:, 0]
+    ycen = scen[:, 1]
+    # cluster by cluster
+    plt.figure(figsize=(8.0, 8.0))
+    cm = plt.cm.get_cmap('tab10')
+    plt.scatter(df_ex["1990"], df_ex["2020"], 10, labels, marker="o", cmap=cm)
+    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.show()
+
+
 def analyze_clusters(csv_file1, csv_file2, xlabel, ylabel):
     
     df_agrar, methane_t = read_world_bank_csv(csv_file1)
@@ -306,18 +392,6 @@ def analyze_clusters(csv_file1, csv_file2, xlabel, ylabel):
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
     plt.show()
-    
-analyze_clusters('Methane emissions (kt of CO2 equivalent).csv', 'Urban population.csv', "Methane emissions", "Urban population" )
-"""
-# move the cluster centres to the original scale
-cen = ct.backscale(cen, df_min, df_max)
-xcen = cen[:, 0]
-ycen = cen[:, 1]
-# cluster by cluster
-plt.figure(figsize=(8.0, 8.0))
-cm = plt.cm.get_cmap('tab10')
-plt.scatter(df_2020["Methane emissions"], df_2020["Urban population"], 10, labels, marker="o",cmap=cm)
-plt.scatter(xcen, ycen, 45, "k", marker="d")
-plt.xlabel("Methane emissions")
-plt.ylabel("Urban population")
-plt.show()
+
+form_cluster('Agricultural land (% of land area).csv', "Methane emissions", "Urban population")    
+analyze_clusters('Forest area (% of land area).csv', 'Agricultural land (% of land area).csv', "Methane emissions", "Urban population" )
