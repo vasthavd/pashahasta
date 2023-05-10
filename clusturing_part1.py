@@ -222,6 +222,93 @@ plt.xlabel("Methane emissions")
 plt.ylabel("Urban population")
 plt.show()
 
+
+"""
+def analyze_clusters(csv_file1, csv_file2, xlabel, ylabel):
+    
+    df_agrar, methane_t = read_world_bank_csv(csv_file1)
+    df_forest, urban_pop_t = read_world_bank_csv(csv_file2)
+    print(df_agrar.describe())
+    print(df_forest.describe())
+
+    # drop rows with nan's in 2019
+    df_agrar = df_agrar[df_agrar["2019"].notna()]
+    print(df_agrar.describe())
+    # alternative way of targetting one or more columns
+    df_forest = df_forest.dropna(subset=["2019"])
+    print(df_forest.describe)
+
+    df_agr2020 = df_agrar[["2019"]].copy()
+    df_for2020 = df_forest[[ "2019"]].copy()
+
+    print(df_agr2020.describe())
+    print(df_for2020.describe())
+
+    df_2020 = pd.merge(df_agr2020, df_for2020, on="Country Name", how="outer")
+    print(df_2020.describe())
+    df_2020.to_excel("agr_for2020.xlsx")
+
+    print(df_2020.describe())
+    df_2020 = df_2020.dropna() # entries with one datum or less are useless.
+    print()
+    print(df_2020.describe())
+    # rename columns
+    df_2020 = df_2020.rename(columns={"2019_x":xlabel, "2019_y":ylabel})
+    pd.plotting.scatter_matrix(df_2020, figsize=(12, 12), s=5, alpha=0.8)
+    print(df_2020.corr())
+
+    df_cluster = df_2020[[xlabel, ylabel]].copy()
+    # normalise
+    df_cluster, df_min, df_max = ct.scaler(df_cluster)
+
+    print("n score")
+    # loop over number of clusters
+    for ncluster in range(2, 10):
+        # set up the clusterer with the number of expected clusters
+        kmeans = cluster.KMeans(n_clusters=ncluster)
+        # Fit the data, results are stored in the kmeans object
+        kmeans.fit(df_cluster) # fit done on x,y pairs
+        labels = kmeans.labels_
+        # extract the estimated cluster centres
+        cen = kmeans.cluster_centers_
+        # calculate the silhoutte score
+        print(ncluster, skmet.silhouette_score(df_cluster, labels))
+        
+
+    ncluster = 5
+    # set up the clusterer with the number of expected clusters
+    kmeans = cluster.KMeans(n_clusters=ncluster)
+    # Fit the data, results are stored in the kmeans object
+    kmeans.fit(df_cluster) # fit done on x,y pairs
+    labels = kmeans.labels_
+    # extract the estimated cluster centres
+    cen = kmeans.cluster_centers_
+    xcen = cen[:, 0]
+    ycen = cen[:, 1]
+    # cluster by cluster
+    plt.figure(figsize=(8.0, 8.0))
+    cm = plt.cm.get_cmap('tab10')
+    plt.scatter(df_cluster[xlabel], df_cluster[ylabel], 10, labels,marker="o", cmap=cm)
+    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.show()
+
+    # move the cluster centres to the original scale
+    cen = ct.backscale(cen, df_min, df_max)
+    xcen = cen[:, 0]
+    ycen = cen[:, 1]
+    # cluster by cluster
+    plt.figure(figsize=(8.0, 8.0))
+    cm = plt.cm.get_cmap('tab10')
+    plt.scatter(df_2020[xlabel], df_2020[ylabel], 10, labels, marker="o",cmap=cm)
+    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.show()
+    
+analyze_clusters('Methane emissions (kt of CO2 equivalent).csv', 'Urban population.csv', "Methane emissions", "Urban population" )
+"""
 # move the cluster centres to the original scale
 cen = ct.backscale(cen, df_min, df_max)
 xcen = cen[:, 0]
