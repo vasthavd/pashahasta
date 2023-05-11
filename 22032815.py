@@ -4,6 +4,7 @@ Created on Wed May 10 18:46:39 2023
 
 @author: vasth
 """
+# Importing all required modules
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -186,11 +187,12 @@ def form_cluster(read_data, label):
     read_data_year = read_data[["1990", "1999", "2009", "2019"]]
 
     # Generate a scatter matrix plot of the data.
-    fig, ax = plt.subplots(figsize=(12, 12))
-    pd.plotting.scatter_matrix(read_data_year, ax=ax, s=5, alpha=0.8)
+    fig, ax = plt.subplots(figsize = (12, 12))
+    pd.plotting.scatter_matrix(read_data_year, ax = ax, s = 5, alpha = 0.8)
 
     # Add a title to the plot
-    plt.suptitle("Scatter Matrix Plot of {}".format(label), y=0.95, fontsize=16)
+    plt.suptitle("Scatter Matrix Plot of {}".format(label), y = 0.95, 
+                 fontsize = 16)
 
     # Display the plot
     plt.show()
@@ -205,7 +207,7 @@ def form_cluster(read_data, label):
     form_cluster = form_cluster.reset_index()
 
     # Drop the "Country Name" column from the DataFrame.
-    form_cluster = form_cluster.drop("Country Name", axis=1)
+    form_cluster = form_cluster.drop("Country Name", axis = 1)
 
     # Print the first 15 rows of the DataFrame.
     print(form_cluster.iloc[0:15])
@@ -217,7 +219,7 @@ def form_cluster(read_data, label):
     for ncluster in range(2, 10):
 
         # Create a K-means clustering model with k clusters.
-        kmeans = cluster.KMeans(n_clusters=ncluster)
+        kmeans = cluster.KMeans(n_clusters = ncluster)
 
         # Fit the model to the data.
         kmeans.fit(df_norm)
@@ -235,7 +237,7 @@ def form_cluster(read_data, label):
     ncluster = 7
 
     # Create a K-means clustering model with k clusters.
-    kmeans = cluster.KMeans(n_clusters=ncluster)
+    kmeans = cluster.KMeans(n_clusters = ncluster)
 
     # Fit the model to the data.
     kmeans.fit(df_norm)
@@ -256,16 +258,19 @@ def form_cluster(read_data, label):
     ycen = cen[:, 1]
 
     # Set the figure size
-    plt.figure(figsize=(8.0, 8.0))
+    plt.figure(figsize = (8.0, 8.0))
 
     # Get the color map
     cm = plt.cm.get_cmap('tab10')
 
-    # Scatter plot the normalized data points colored by the cluster with specified markersize, marker and cmap
-    plt.scatter(df_norm["1990"], df_norm["2019"], 10, labels, marker="o", cmap=cm)
+    # Scatter plot the normalized data points colored by the cluster with 
+    # specified markersize, marker and cmap
+    plt.scatter(df_norm["1990"], df_norm["2019"], 10, 
+                labels, marker = "o", cmap = cm)
 
-    # Scatter plot the cluster centroids with specified markersize, marker and color
-    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    # Scatter plot the cluster centroids with 
+    # specified markersize, marker and color
+    plt.scatter(xcen, ycen, 45, "k", marker = "d")
 
     # Set the label for x-axis
     plt.xlabel("{} (1990)".format(label))
@@ -296,16 +301,19 @@ def form_cluster(read_data, label):
     ycen = scen[:, 1]
 
     # Set the figure size
-    plt.figure(figsize=(8.0, 8.0))
+    plt.figure(figsize = (8.0, 8.0))
 
     # Get the color map
     cm = plt.cm.get_cmap('tab10')
 
-    # Scatter plot the data points colored by the cluster with specified markersize, marker and cmap
-    plt.scatter(form_cluster["1990"], form_cluster["2019"], 10, labels, marker="o", cmap=cm)
+    # Scatter plot the data points colored by the cluster with 
+    # specified markersize, marker and cmap
+    plt.scatter(form_cluster["1990"], form_cluster["2019"], 10, 
+                labels, marker = "o", cmap = cm)
 
-    # Scatter plot the cluster centroids with specified markersize, marker and color
-    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    # Scatter plot the cluster centroids with 
+    # specified markersize, marker and color
+    plt.scatter(xcen, ycen, 45, "k", marker = "d")
 
     # Set the label for x-axis
     plt.xlabel("{} (1990)".format(label))
@@ -344,12 +352,14 @@ def analyze_clusters(analyze_df, analyze_dfb, xlabel, ylabel):
     print(analyze_df.describe())
     print(analyze_dfb.describe())
 
-    # drop rows with missing values in the "2019" column for analyze_df and analyze_dfb
+    # drop rows with missing values in the "2019" column 
+    # for analyze_df and analyze_dfb
     analyze_df = analyze_df[analyze_df["2019"].notna()]
     print(analyze_df.describe())
 
-    # an alternative way of dropping rows with missing values in the "2019" column for analyze_dfb
-    analyze_dfb = analyze_dfb.dropna(subset=["2019"])
+    # an alternative way of dropping rows with missing values 
+    # in the "2019" column for analyze_dfb
+    analyze_dfb = analyze_dfb.dropna(subset = ["2019"])
     print(analyze_dfb.describe)
 
     # extract the "2019" column from analyze_df and analyze_dfb
@@ -362,7 +372,8 @@ def analyze_clusters(analyze_df, analyze_dfb, xlabel, ylabel):
 
     # merge year_extracted and year_extractedb on the "Country Name" column
     # and get a new data frame with the merged "2019" column
-    year_df = pd.merge(year_extracted, year_extractedb, on="Country Name", how="outer")
+    year_df = pd.merge(year_extracted, year_extractedb, 
+                       on = "Country Name", how = "outer")
 
     # print descriptive statistics for year_df
     print(year_df.describe())
@@ -379,14 +390,15 @@ def analyze_clusters(analyze_df, analyze_dfb, xlabel, ylabel):
 
     # rename the "2019_x" and "2019_y" columns of year_df
     # to the xlabel and ylabel variables, respectively
-    year_df = year_df.rename(columns={"2019_x":xlabel, "2019_y":ylabel})
+    year_df = year_df.rename(columns = {"2019_x" : xlabel, "2019_y" : ylabel})
 
-    # plot a scatter matrix of year_df with a figure size of (12, 12), point size of 5, and alpha of 0.8
-    fig, ax = plt.subplots(figsize=(12, 12))
-    pd.plotting.scatter_matrix(year_df, ax=ax, s=5, alpha=0.8)
+    # plot a scatter matrix of year_df with a figure size of (12, 12), 
+    # point size of 5, and alpha of 0.8
+    fig, ax = plt.subplots(figsize = (12, 12))
+    pd.plotting.scatter_matrix(year_df, ax = ax, s = 5, alpha = 0.8)
 
     # add a title to the plot
-    plt.suptitle("Scatter Matrix of 2019 Data", y=0.95, fontsize=16)
+    plt.suptitle("Scatter Matrix of 2019 Data", y = 0.95, fontsize = 16)
 
     # display the plot
     plt.show()
@@ -419,7 +431,7 @@ def analyze_clusters(analyze_df, analyze_dfb, xlabel, ylabel):
     ncluster = 5
 
     # Set up the clusterer with the number of expected clusters
-    kmeans = cluster.KMeans(n_clusters=ncluster)
+    kmeans = cluster.KMeans(n_clusters = ncluster)
 
     # Fit the data, results are stored in the kmeans object
     kmeans.fit(df_cluster)  # Fit done on x,y pairs
@@ -430,10 +442,11 @@ def analyze_clusters(analyze_df, analyze_dfb, xlabel, ylabel):
     ycen = cen[:, 1]
 
     # Cluster by cluster plot
-    plt.figure(figsize=(8.0, 8.0))
+    plt.figure(figsize = (8.0, 8.0))
     cm = plt.cm.get_cmap('tab10')
-    plt.scatter(df_cluster[xlabel], df_cluster[ylabel], 10, labels, marker="o", cmap=cm)
-    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    plt.scatter(df_cluster[xlabel], df_cluster[ylabel], 
+                10, labels, marker = "o", cmap = cm)
+    plt.scatter(xcen, ycen, 45, "k", marker = "d")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
 
@@ -447,10 +460,11 @@ def analyze_clusters(analyze_df, analyze_dfb, xlabel, ylabel):
     ycen = cen[:, 1]
 
     # Cluster by cluster plot on original scale
-    plt.figure(figsize=(8.0, 8.0))
+    plt.figure(figsize = (8.0, 8.0))
     cm = plt.cm.get_cmap('tab10')
-    plt.scatter(year_df[xlabel], year_df[ylabel], 10, labels, marker="o", cmap=cm)
-    plt.scatter(xcen, ycen, 45, "k", marker="d")
+    plt.scatter(year_df[xlabel], year_df[ylabel], 10, 
+                labels, marker = "o", cmap = cm)
+    plt.scatter(xcen, ycen, 45, "k", marker = "d")
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
 
@@ -555,7 +569,7 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
         
         # Mathematical calculations and returns a function value
         x = x - 1990
-        f = a + b*x + c*x**2 + d*x**3 + e*x**4
+        f = a + b * x + c * x ** 2 + d * x ** 3 + e * x ** 4
         return f
 
 
@@ -577,7 +591,7 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
         """
         
         # Mathematical calculations and returns a function value
-        f = n0 / (1 + np.exp(-g*(t - t0)))
+        f = n0 / (1 + np.exp(-g * (t - t0)))
         return f
 
 
@@ -615,7 +629,7 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     # The `p0` argument specifies the initial values 
     # for the parameters of the curve.
     param, covar = opt.curve_fit(exponential, country_data[xlabel], 
-                                 country_data[ylabel], p0=(1.2e12, 0.03))
+                                 country_data[ylabel], p0 = (1.2e12, 0.03))
 
     # Calculate the standard deviation of the parameters.
     sigma = np.sqrt(np.diag(covar))
@@ -639,14 +653,14 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     plt.figure()
 
     # Plot the data points.
-    plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
+    plt.plot(country_data[xlabel], country_data[ylabel], label = ylabel)
 
     # Plot the forecast.
-    plt.plot(year, forecast, label="Forecast")
+    plt.plot(year, forecast, label = "Forecast")
 
     # Fill the area between the forecast and 
     # the error range with a yellow fill.
-    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.fill_between(year, low, up, color = "yellow", alpha = 0.7)
 
     # Set the x-axis label.
     plt.xlabel(xlabel)
@@ -694,13 +708,13 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     plt.figure()
 
     # Plot the data points.
-    plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
+    plt.plot(country_data[xlabel], country_data[ylabel], label = ylabel)
 
     # Plot the forecast.
-    plt.plot(year, forecast, label="Forecast")
+    plt.plot(year, forecast, label = "Forecast")
 
     # Fill the area between the forecast and the error range with a yellow fill
-    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.fill_between(year, low, up, color = "yellow", alpha = 0.7)
 
     # Set the x-axis label.
     plt.xlabel(xlabel)
@@ -726,7 +740,7 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     # for the parameters of the curve.
     param, covar = opt.curve_fit(logistic, country_data[xlabel], 
                                  country_data[ylabel], 
-                                 p0=(1.2e12, 0.03, 1990.0))
+                                 p0 = (1.2e12, 0.03, 1990.0))
 
     # Calculate the standard deviation of the parameters.
     sigma = np.sqrt(np.diag(covar))
@@ -741,13 +755,13 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     low, up = err.err_ranges(year, logistic, param, sigma)
 
     # Plot the data points.
-    plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
+    plt.plot(country_data[xlabel], country_data[ylabel], label = ylabel)
 
     # Plot the forecast.
-    plt.plot(year, forecast, label="Forecast")
+    plt.plot(year, forecast, label = "Forecast")
 
     # Fill the area between the forecast and the error range with a yellow fill
-    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.fill_between(year, low, up, color = "yellow", alpha = 0.7)
 
     # Set the x-axis label.
     plt.xlabel(xlabel)
@@ -848,10 +862,7 @@ analyze_clusters(forest_area, agri, "Forest area", "Agricultural land" )
 
 
 gdppc, gdppc_t = read_world_bank_csv('GDP per capita growth (annual %).csv')
-print('\nGDP per capita growth (annual %)')
-print(gdp.head())
-print(gdp_t.head())
-print(gdp.describe())
+
 
 # United States
 
