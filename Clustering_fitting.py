@@ -81,7 +81,8 @@ def read_world_bank_csv(file_name):
 def get_country_data(df, country, value):
     
     """
-    Returns a pandas DataFrame containing the data for a given country and a specific value.
+    Returns a pandas DataFrame containing the data for a given country 
+    and a specific value.
 
     Parameters
     ----------
@@ -95,33 +96,31 @@ def get_country_data(df, country, value):
     Returns
     -------
     pandas.DataFrame
-        A DataFrame containing the year and the specified value for the given country.
+        A DataFrame containing the year and the specified value 
+        for the given country.
     """
+    # select columns for given country and drop null values
     country_data = df.loc[:,[country]].reset_index().dropna()
+        
+    # rename columns as Year and the specified value
     country_data.columns = ['Year', value]
+        
+    # return the DataFrame
     return country_data
 
 
-
-# Indicator name: Access to Electricity(% of Population)
-
-ate, ate_t = read_world_bank_csv('GPI.csv')
-print('\nAccess to Electricity(% of Population)')
-print(ate.head())
-print(ate_t.head())
-print(ate.describe())
-
-
-gam = get_country_data(ate_t, 'India', 'GPI')
 
 
 def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     
     """
-    Creates and displays plots of different fit functions for a given country's data.
+    Creates and displays plots of different fit functions for 
+    a given country's data.
 
-    Args:
-        country_data (pandas.DataFrame): A DataFrame containing the country's data.
+    Parameters
+    ----------
+        country_data (pandas.DataFrame): A DataFrame containing the 
+        country's data.
         xlabel (str): The label for the x-axis.
         ylabel (str): The label for the y-axis.
         country (str): The name of the country.
@@ -133,16 +132,21 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
     def exponential(t, n0, g):
         
         """
-        Calculates an exponential function with scale factor n0 and growth rate g.
+        Calculates an exponential function with scale factor n0 
+        and growth rate g.
     
-        Args:
+        Parameters
+        ----------
             - t (float): The input variable of the function.
             - n0 (float): The scale factor of the exponential function.
             - g (float): The growth rate of the exponential function.
     
-        Returns:
+        Returns
+        -------
             - f (float): The result of the exponential function.
         """
+        
+        # Mathematical calculations and returns a function value
         t = t - 1990
         f = n0 * np.exp(g*t)
         return f
@@ -153,7 +157,8 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
         """
         Calculates a polynomial function.
     
-        Args:
+        Parameters
+        ----------
             - x (float): The input variable of the function.
             - a (float): The constant term of the polynomial.
             - b (float): The coefficient of x.
@@ -161,9 +166,12 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
             - d (float): The coefficient of x^3.
             - e (float): The coefficient of x^4.
     
-        Returns:
+        Returns
+        -------
             - f (float): The result of the polynomial function.
         """
+        
+        # Mathematical calculations and returns a function value
         x = x - 1990
         f = a + b*x + c*x**2 + d*x**3 + e*x**4
         return f
@@ -171,108 +179,308 @@ def country_data_analysis_plot(country_data, xlabel, ylabel, country):
 
     def logistic(t, n0, g, t0):
         """
-        Calculates a logistic function with scale factor n0, growth rate g, and time delay t0.
+        Calculates a logistic function with scale factor n0, growth rate g, 
+        and time delay t0.
     
-        Args:
+        Parameters
+        ----------
             - t (float): The input variable of the function.
             - n0 (float): The scale factor of the logistic function.
             - g (float): The growth rate of the logistic function.
             - t0 (float): The time delay of the logistic function.
     
-        Returns:
+        Returns
+        -------
             - f (float): The result of the logistic function.
         """
+        
+        # Mathematical calculations and returns a function value
         f = n0 / (1 + np.exp(-g*(t - t0)))
         return f
 
 
     def err_ranges(xdata, func, popt, sigma):
+        
         """
         Calculates the upper and lower error ranges of a function.
     
         Args:
             - xdata (array-like): The input values for the function.
-            - func (function): The function to be used for calculating the error ranges.
+            - func (function): The function to be used for calculating 
+                                the error ranges.
             - popt (array-like): The optimized parameters of the function.
             - sigma (float): The standard deviation of the error.
     
-        Returns:
+        Returns
+        -------
             - err_low (array-like): The lower error range of the function.
             - err_up (array-like): The upper error range of the function.
         """
+        
+        # Mathematical calculations
         err_up = func(xdata, *popt + sigma)
         err_low = func(xdata, *popt - sigma)
         return err_low, err_up
 
 
+    
+    # Exponential fit plotting
 
+    # Convert the `xlabel` column in `country_data` to a numeric type.
     country_data[xlabel] = pd.to_numeric(country_data[xlabel])
-    
-    # Exponential fit
-    #print(type(country_data["Year"].iloc[1]))
-    country_data[xlabel] = pd.to_numeric(country_data[xlabel])
-    print(type(country_data[xlabel].iloc[1]))
-    param, covar = opt.curve_fit(exponential, country_data[xlabel], country_data[ylabel], p0=(1.2e12, 0.03))
+
+    # Fit an exponential curve to the data in the `xlabel` and `ylabel` columns
+    # The `p0` argument specifies the initial values 
+    # for the parameters of the curve.
+    param, covar = opt.curve_fit(exponential, country_data[xlabel], 
+                                 country_data[ylabel], p0=(1.2e12, 0.03))
+
+    # Calculate the standard deviation of the parameters.
     sigma = np.sqrt(np.diag(covar))
+
+    # Print the standard deviation.
     print(sigma)
-    year = np.arange(1960, 2031)
+
+    # Create a NumPy array of years from 1960 to 2030.
+    year = np.arange(1960, 2030)
+
+    # Calculate the forecast for the years in `year`.
     forecast = exponential(year, *param)
+
+    # Calculate the upper and lower bounds of the error range for the forecast.
     low, up = err.err_ranges(year, exponential, param, sigma)
+
+    # Add a column to `country_data` containing the fitted values.
     country_data["fit"] = exponential(country_data[xlabel], *param)
+
+    # Create a figure.
     plt.figure()
+
+    # Plot the data points.
     plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
-    plt.plot(year, forecast, label="forecast")
+
+    # Plot the forecast.
+    plt.plot(year, forecast, label="Forecast")
+
+    # Fill the area between the forecast and 
+    # the error range with a yellow fill.
     plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+
+    # Set the x-axis label.
     plt.xlabel(xlabel)
+
+    # Set the y-axis label.
     plt.ylabel(ylabel)
-    # set the title with dynamic label values
-    plt.title("Exponential fit plot of {} vs. {} for {}".format(ylabel, xlabel, country))
+
+    # Set the title.
+    # The `country` variable is used to dynamically set the title.
+    plt.title("Exponential fit plot of {}".format(country))
+
+    # Add a legend.
     plt.legend()
+
+    # Show the plot.
     plt.show()
+
     
     
-    # Polynomial fit
-    param, covar = opt.curve_fit(poly, country_data[xlabel], country_data[ylabel])
+    # Polynomial fit plotting
+
+    # Fit a polynomial curve to the data in the `xlabel` and `ylabel` columns.
+    param, covar = opt.curve_fit(poly, country_data[xlabel], 
+                                 country_data[ylabel])
+
+    # Calculate the standard deviation of the parameters.
     sigma = np.sqrt(np.diag(covar))
+
+    # Print the standard deviation.
     print(sigma)
-    year = np.arange(1960, 2031)
+
+    # Create a NumPy array of years from 1960 to 2030.
+    year = np.arange(1960, 2030)
+
+    # Calculate the forecast for the years in `year`.
     forecast = poly(year, *param)
+
+    # Calculate the upper and lower bounds of the error range for the forecast.
     low, up = err.err_ranges(year, poly, param, sigma)
+
+    # Add a column to `country_data` containing the fitted values.
     country_data["fit"] = poly(country_data[xlabel], *param)
+
+    # Create a figure.
     plt.figure()
+
+    # Plot the data points.
     plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
-    plt.plot(year, forecast, label="forecast")
+
+    # Plot the forecast.
+    plt.plot(year, forecast, label="Forecast")
+
+    # Fill the area between the forecast and the error range with a yellow fill
     plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+
+    # Set the x-axis label.
     plt.xlabel(xlabel)
+
+    # Set the y-axis label.
     plt.ylabel(ylabel)
-    # set the title with dynamic label values
-    plt.title("Polynomial fit plot of {} vs. {} for {}".format(ylabel, xlabel, country))
+
+    # Set the title.
+    # The `country` variable is used to dynamically set the title.
+    plt.title("Polynomial fit plot of {}".format(country))
+
+    # Add a legend.
     plt.legend()
+
+    # Show the plot.
     plt.show()
     
-    # Logistic fit
-    param, covar = opt.curve_fit(logistic, country_data[xlabel], country_data[ylabel],
-    p0=(1.2e12, 0.03, 1990.0))
-    low, up = err.err_ranges(year, logistic, param, sigma)
+    
+    # Logistic fit plotting
+
+    # Fit a logistic curve to the data in the `xlabel` and `ylabel` columns.
+    # The `p0` argument specifies the initial values
+    # for the parameters of the curve.
+    param, covar = opt.curve_fit(logistic, country_data[xlabel], 
+                                 country_data[ylabel], 
+                                 p0=(1.2e12, 0.03, 1990.0))
+
+    # Calculate the standard deviation of the parameters.
     sigma = np.sqrt(np.diag(covar))
-    plt.figure()
+
+    # Create a NumPy array of years from 1960 to 2030.
+    year = np.arange(1960, 2030)
+
+    # Calculate the forecast for the years in `year`.
+    forecast = logistic(year, *param)
+
+    # Calculate the upper and lower bounds of the error range for the forecast.
+    low, up = err.err_ranges(year, logistic, param, sigma)
+
+    # Plot the data points.
     plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
-    plt.plot(year, forecast, label="forecast")
+
+    # Plot the forecast.
+    plt.plot(year, forecast, label="Forecast")
+
+    # Fill the area between the forecast and the error range with a yellow fill
     plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+
+    # Set the x-axis label.
     plt.xlabel(xlabel)
+
+    # Set the y-axis label.
     plt.ylabel(ylabel)
-    # set the title with dynamic label values
-    plt.title("Logistic fit plot of {} vs. {} for {}".format(ylabel, xlabel, country))
+
+    # Set the title.
+    # The `country` variable is used to dynamically set the title.
+    plt.title("Logistic fit plot of {}".format(country))
+
+    # Add a legend.
     plt.legend()
+
+    # Show the plot.
     plt.show()
-    
+
     # Printing GDP for 2030
-    forecast_data = logistic(2030, *param)/1e9
-    low, up = err_ranges(2030, logistic, param, sigma)
-    sig = np.abs(up-low)/(2.0 * 1e9)
-    print("{} value for 2030 for {} is", forecast_data, "+/-", sig)
-    # create the print statement with dynamic variables
-    print("{} value from 2030 forecast of {} is".format(ylabel, country), forecast_data, "+/-", sig)
+
+    # Calculate the GDP forecast for 2030.
+    forecast_data = logistic(2030, *param) / 1e9
+
+    # Calculate the upper and lower bounds of the 
+    # error range for the forecast for 2030.
+    low, up = err.err_ranges(2030, logistic, param, sigma)
+
+    # Calculate the standard deviation of the error 
+    # range for the forecast for 2030.
+    sig = np.abs(up - low) / (2.0 * 1e9)
+
+    # Create the print statement with dynamic variables.
+    print("{} value from 2030 forecast of {} is".format(ylabel, country), 
+          forecast_data, "+/-", sig)
     
-    
-country_data_analysis_plot(gam, 'Year', 'GPI', 'India')
+
+
+# Fitting analysis on different indicators and countries in top ten of GDP list
+
+# Indicator name: GDP per capita growth (annual %)
+
+
+gdp, gdp_t = read_world_bank_csv('GDP per capita growth (annual %).csv')
+print('\nGDP per capita growth (annual %)')
+print(gdp.head())
+print(gdp_t.head())
+print(gdp.describe())
+
+# United States
+
+gdp_usa = get_country_data(gdp_t, 'United States', 'GDP')
+country_data_analysis_plot(gdp_usa, 'Year', 'GDP', 'United States')
+
+# China
+
+gdp_china = get_country_data(gdp_t, 'China', 'GDP')
+country_data_analysis_plot(gdp_china, 'Year', 'GDP', 'China')
+
+# United Kingdom
+
+gdp_uk = get_country_data(gdp_t, 'United Kingdom', 'GDP')
+country_data_analysis_plot(gdp_uk, 'Year', 'GDP', 'United Kingdom')
+
+# India
+
+gdp_india = get_country_data(gdp_t, 'India', 'GDP')
+country_data_analysis_plot(gdp_india, 'Year', 'GDP', 'India')
+
+
+# Indicator name: GPI (Gender Parity Index)
+
+gpi, gpi_t = read_world_bank_csv('GPI.csv')
+
+# United States
+
+gpi_usa = get_country_data(gpi_t, 'United States', 'GPI')
+country_data_analysis_plot(gpi_usa, 'Year', 'GPI', 'United States')
+
+# China
+
+gpi_china = get_country_data(gpi_t, 'China', 'GPI')
+country_data_analysis_plot(gpi_china, 'Year', 'GPI', 'China')
+
+# United Kingdom
+
+gpi_uk = get_country_data(gpi_t, 'United Kingdom', 'GPI')
+country_data_analysis_plot(gpi_uk, 'Year', 'GPI', 'United Kingdom')
+
+# India
+
+gpi_india = get_country_data(gpi_t, 'India', 'GPI')
+country_data_analysis_plot(gpi_india, 'Year', 'GPI', 'India')
+
+# Indicator name: Forest area (% of land area)
+
+fa, fa_t = read_world_bank_csv('Forest area (% of land area).csv')
+
+# United States
+
+fa_usa = get_country_data(fa_t, 'United States', 'Forest Area')
+country_data_analysis_plot(fa_usa, 'Year', 'Forest Area', 'United States')
+
+# China
+
+fa_china = get_country_data(fa_t, 'China', 'Forest Area')
+country_data_analysis_plot(fa_china, 'Year', 'Forest Area', 'China')
+
+# United Kingdom
+
+fa_uk = get_country_data(fa_t, 'United Kingdom', 'Forest Area')
+country_data_analysis_plot(fa_uk, 'Year', 'Forest Area', 'United Kingdom')
+
+# India
+
+fa_india = get_country_data(fa_t, 'India', 'Forest Area')
+country_data_analysis_plot(fa_india, 'Year', 'Forest Area', 'India')
+
+
+
