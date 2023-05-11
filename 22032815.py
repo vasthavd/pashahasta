@@ -829,23 +829,19 @@ gpi, gpi_t = read_world_bank_csv('GPI.csv')
 
 
 # Correlation Analysis for several years by calling correlation_heatmap func.
-# Saving figures 
 
 correlation_heatmap('1990')
-plt.savefig('Correlation_Heatmap_1990.png', dpi = 300)
 
 correlation_heatmap('1999')
-plt.savefig('Correlation_Heatmap_1999.png', dpi = 300)
 
 correlation_heatmap('2009')
-plt.savefig('Correlation_Heatmap_2009.png', dpi = 300)
 
 correlation_heatmap('2019')
-plt.savefig('Correlation_Heatmap_2019.png', dpi = 300)
 
 
 
 # Cluster forming and analysis for various indicators
+
 form_cluster(urban_pop, "Urban population") 
 form_cluster(methane, "Methane emissions")    
 analyze_clusters(methane, urban_pop, "Methane emissions", "Urban population" )
