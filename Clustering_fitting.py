@@ -1,16 +1,12 @@
 # -*- coding: utf-8 -*-
 """
-Created on Tue May  9 15:45:38 2023
+Created on Wed May 10 18:46:39 2023
 
 @author: vasth
 """
-
-# Importing all required modules with genarlised aliasing
-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 import scipy.optimize as opt
 import errors as err
 
@@ -81,159 +77,202 @@ def read_world_bank_csv(file_name):
 
 
 
-# Defining a function group_years_by_count
-def group_years_by_count(year_as_column_df):
+
+def get_country_data(df, country, value):
     
     """
-    Group years based on non-null count.
-
-    This function takes a pandas dataframe as input, and creates a new    
-    dataframe with non-null count and year columns. The years are then grouped
-    into two categories based on whether their non-null count is above or below 
-    the median count. The resulting groups are printed with a message 
-    indicating the count, which is useful to determine years selection for 
-    analysis.
+    Returns a pandas DataFrame containing the data for a given country and a specific value.
 
     Parameters
     ----------
-    year_as_column_df : pandas DataFrame
-    A dataframe with one column containing year data.
+    df : pandas.DataFrame
+        A pandas DataFrame containing the data.
+    country : str
+        The name of the country to filter the data for.
+    value : str
+        The name of the value to extract from the data.
 
     Returns
     -------
-    result: str
-    A string with two sections separated by a blank line. The first section
-    lists the years with non-null count above the median count, and the
-    second section lists the years with non-null count less than or equal
-    to the median count.
-    
+    pandas.DataFrame
+        A DataFrame containing the year and the specified value for the given country.
     """
-    
-    # Create dataframe with non-null count and year columns
-    non_null_years = year_as_column_df.notnull().sum()\
-        .sort_values(ascending = False).to_frame().reset_index()
-    non_null_years.columns = ['Year', 'Non-null Count']
-
-    # Calculate median non-null count
-    median_count = non_null_years['Non-null Count'].median()
-
-    # Group years based on non-null count above or below median
-    non_null_groups = non_null_years.groupby(
-        non_null_years['Non-null Count'] > median_count)\
-        .apply(lambda x: x['Year'].tolist())
-
-    # Print groups with messages indicating count
-    result = []
-    result.append(
-        f"Years with non-null count above the median count ({median_count}):")
-    result.append(str(non_null_groups[True]))
-    result.append("")
-    result.append(
-        f"Years with non-null count <= median count ({median_count}):")
-    result.append(str(non_null_groups[False]))
-    return '\n'.join(result)
-
-
-# Defining a function line_plot
-def line_plot(year_as_column_df, xlabel, ylabel, title):
-    
-  """
-  Plots a line plot of the given DataFrame.
-
-  Parameters
-  ----------
-    year_as_column_df: pandas DataFrame
-    The DataFrame to plot.
-    xlabel: str
-    The label for the x-axis.
-    ylabel: str
-    The label for the y-axis.
-    title: str
-    The title for the plot.
-
-  Returns
-  -------
-  None, Plots a matplotlib figure object: Line - Plot.
-  
-  """
-  
-  # Select the 10 countries to plot in order of the value list.
-  countries_list = ['India']
-
-  # Get the data for these countries.
-  sorted_countries_list = year_as_column_df.loc[countries_list]
-
-  # Plot the data.
-  plt.figure()
-  for country in countries_list:
-    plt.plot(year_as_column_df.columns, 
-             sorted_countries_list.loc[country], label = country)
-    
-  # Set the x-axis limits to the minimum and maximum years in the DataFrame.
-  plt.xlim(min(year_as_column_df.columns), max(year_as_column_df.columns))
-  
-  # Set the x-axis ticks to the years, spaced every 5 years.
-  plt.xticks(np.arange(0, len(year_as_column_df.columns)+1, 5), rotation = 90)
-
-  # Set the label for the x-axis.    
-  plt.xlabel(xlabel)
-  
-  # Set the label for the y-axis.
-  plt.ylabel(ylabel)
-  
-  # Set the title for the plot.
-  plt.title(title)
-  
-  
-  # Add a legend to the plot, being labeled with the corresponding country.
-  plt.legend(bbox_to_anchor = (1.05, 1))
-  
-  # Return the current figure object.
-  return plt.gcf()
-
-
-def get_country_data(df, country):
     country_data = df.loc[:,[country]].reset_index().dropna()
-    country_data.columns = ['Year', 'value']
+    country_data.columns = ['Year', value]
     return country_data
+
 
 
 # Indicator name: Access to Electricity(% of Population)
 
-ate, ate_t = read_world_bank_csv('Access to Electricity(% of Population).csv')
+ate, ate_t = read_world_bank_csv('GPI.csv')
 print('\nAccess to Electricity(% of Population)')
 print(ate.head())
 print(ate_t.head())
 print(ate.describe())
-print(group_years_by_count(ate))
 
-india_data = get_country_data(ate_t, 'India')
 
-def poly(x, a, b, c, d, e):
-    """ Calulates polynominal"""
-    x = x - 1990
-    f = a + b*x + c*x**2 + d*x**3 + e*x**4
-    return f
+gam = get_country_data(ate_t, 'India', 'GPI')
 
-# Select the "Year" and "value" columns from the India data dataframe
-x = india_data["Year"]
-y = india_data["value"]
 
-param, covar = opt.curve_fit(poly, x, y)
-sigma = np.sqrt(np.diag(covar))
-print(sigma)
-year = np.arange(1960, 2031)
-forecast = poly(year, *param)
+def country_data_analysis_plot(country_data, xlabel, ylabel, country):
+    
+    """
+    Creates and displays plots of different fit functions for a given country's data.
 
-# Use the "Year" and "fit" columns from the India data dataframe
-india_data["fit"] = poly(india_data["Year"].astype(int), *param)
-plt.figure()
-plt.plot(india_data["Year"], india_data["value"], label="value")
-plt.plot(year, forecast, label="forecast")
+    Args:
+        country_data (pandas.DataFrame): A DataFrame containing the country's data.
+        xlabel (str): The label for the x-axis.
+        ylabel (str): The label for the y-axis.
+        country (str): The name of the country.
 
-low, up = err.err_ranges(year, poly, param, sigma)
-plt.fill_between(year, low, up, color="yellow", alpha=0.7)
-plt.xlabel("year")
-plt.ylabel("value")
-plt.legend()
-plt.show()
+    Returns:
+        None
+    """
+    
+    def exponential(t, n0, g):
+        
+        """
+        Calculates an exponential function with scale factor n0 and growth rate g.
+    
+        Args:
+            - t (float): The input variable of the function.
+            - n0 (float): The scale factor of the exponential function.
+            - g (float): The growth rate of the exponential function.
+    
+        Returns:
+            - f (float): The result of the exponential function.
+        """
+        t = t - 1990
+        f = n0 * np.exp(g*t)
+        return f
+
+
+    def poly(x, a, b, c, d, e):
+        
+        """
+        Calculates a polynomial function.
+    
+        Args:
+            - x (float): The input variable of the function.
+            - a (float): The constant term of the polynomial.
+            - b (float): The coefficient of x.
+            - c (float): The coefficient of x^2.
+            - d (float): The coefficient of x^3.
+            - e (float): The coefficient of x^4.
+    
+        Returns:
+            - f (float): The result of the polynomial function.
+        """
+        x = x - 1990
+        f = a + b*x + c*x**2 + d*x**3 + e*x**4
+        return f
+
+
+    def logistic(t, n0, g, t0):
+        """
+        Calculates a logistic function with scale factor n0, growth rate g, and time delay t0.
+    
+        Args:
+            - t (float): The input variable of the function.
+            - n0 (float): The scale factor of the logistic function.
+            - g (float): The growth rate of the logistic function.
+            - t0 (float): The time delay of the logistic function.
+    
+        Returns:
+            - f (float): The result of the logistic function.
+        """
+        f = n0 / (1 + np.exp(-g*(t - t0)))
+        return f
+
+
+    def err_ranges(xdata, func, popt, sigma):
+        """
+        Calculates the upper and lower error ranges of a function.
+    
+        Args:
+            - xdata (array-like): The input values for the function.
+            - func (function): The function to be used for calculating the error ranges.
+            - popt (array-like): The optimized parameters of the function.
+            - sigma (float): The standard deviation of the error.
+    
+        Returns:
+            - err_low (array-like): The lower error range of the function.
+            - err_up (array-like): The upper error range of the function.
+        """
+        err_up = func(xdata, *popt + sigma)
+        err_low = func(xdata, *popt - sigma)
+        return err_low, err_up
+
+
+
+    country_data[xlabel] = pd.to_numeric(country_data[xlabel])
+    
+    # Exponential fit
+    #print(type(country_data["Year"].iloc[1]))
+    country_data[xlabel] = pd.to_numeric(country_data[xlabel])
+    print(type(country_data[xlabel].iloc[1]))
+    param, covar = opt.curve_fit(exponential, country_data[xlabel], country_data[ylabel], p0=(1.2e12, 0.03))
+    sigma = np.sqrt(np.diag(covar))
+    print(sigma)
+    year = np.arange(1960, 2031)
+    forecast = exponential(year, *param)
+    low, up = err.err_ranges(year, exponential, param, sigma)
+    country_data["fit"] = exponential(country_data[xlabel], *param)
+    plt.figure()
+    plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
+    plt.plot(year, forecast, label="forecast")
+    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    # set the title with dynamic label values
+    plt.title("Exponential fit plot of {} vs. {} for {}".format(ylabel, xlabel, country))
+    plt.legend()
+    plt.show()
+    
+    
+    # Polynomial fit
+    param, covar = opt.curve_fit(poly, country_data[xlabel], country_data[ylabel])
+    sigma = np.sqrt(np.diag(covar))
+    print(sigma)
+    year = np.arange(1960, 2031)
+    forecast = poly(year, *param)
+    low, up = err.err_ranges(year, poly, param, sigma)
+    country_data["fit"] = poly(country_data[xlabel], *param)
+    plt.figure()
+    plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
+    plt.plot(year, forecast, label="forecast")
+    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    # set the title with dynamic label values
+    plt.title("Polynomial fit plot of {} vs. {} for {}".format(ylabel, xlabel, country))
+    plt.legend()
+    plt.show()
+    
+    # Logistic fit
+    param, covar = opt.curve_fit(logistic, country_data[xlabel], country_data[ylabel],
+    p0=(1.2e12, 0.03, 1990.0))
+    low, up = err.err_ranges(year, logistic, param, sigma)
+    sigma = np.sqrt(np.diag(covar))
+    plt.figure()
+    plt.plot(country_data[xlabel], country_data[ylabel], label=ylabel)
+    plt.plot(year, forecast, label="forecast")
+    plt.fill_between(year, low, up, color="yellow", alpha=0.7)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    # set the title with dynamic label values
+    plt.title("Logistic fit plot of {} vs. {} for {}".format(ylabel, xlabel, country))
+    plt.legend()
+    plt.show()
+    
+    # Printing GDP for 2030
+    forecast_data = logistic(2030, *param)/1e9
+    low, up = err_ranges(2030, logistic, param, sigma)
+    sig = np.abs(up-low)/(2.0 * 1e9)
+    print("{} value for 2030 for {} is", forecast_data, "+/-", sig)
+    # create the print statement with dynamic variables
+    print("{} value from 2030 forecast of {} is".format(ylabel, country), forecast_data, "+/-", sig)
+    
+    
+country_data_analysis_plot(gam, 'Year', 'GPI', 'India')
